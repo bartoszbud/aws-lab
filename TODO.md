@@ -1,0 +1,2 @@
+- [x] Initialize repo
+- [x] Add tflint workflow
