@@ -1,0 +1,59 @@
+name: Terraform plan
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - infra/**
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Detect changes
+        id: detect-changes
+        run: |
+          script...
+
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-region: eu-west-1
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GitHubActionsRole
+      
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "1.14.6"
+
+      - name: Initialize terraform
+        id: init
+        run: terraform init 
+        working-directory: 
+
+      - name: Validate terraform
+        id: validate
+        run: terraform validate 
+        working-directory: 
+
+      - name: Generate plan
+        id: plan
+        run: terraform plan -out=tfplan
+        working-directory:
+
+      - name: add plan to PR...
