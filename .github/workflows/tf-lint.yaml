@@ -2,6 +2,8 @@ name: Terraform lint
 
 on:
   push:
+    paths:
+      - infra/**
 
 jobs:
   main:
