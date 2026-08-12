@@ -37,14 +37,16 @@ resource "aws_s3_bucket_lifecycle_configuration" "state_bucket_lifecycle" {
   }
 }
 
-resource "aws_s3_bucket_logging" "name" {
+resource "aws_s3_bucket_logging" "state_bucket_logging" {
   bucket = aws_s3_bucket.state.id
 
   target_bucket = aws_s3_bucket.state_logs.id
   target_prefix = "logs/"
 }
 
-
+# disable state logs bucket logging check - no need to enable logging for this bucket as it is used for storing logs from other buckets
+#tfsec:ignore:aws-s3-enable-versioning
+#tfsec:ignore:aws-s3-enable-bucket-logging
 resource "aws_s3_bucket" "state_logs" {
   bucket_prefix = "${var.environment}-${var.module_name}-state-logs-"
   force_destroy = false
@@ -55,6 +57,8 @@ resource "aws_s3_bucket" "state_logs" {
   }
 }
 
+#ignore state access logs bucket encryption with customer key - logs only
+#tfsec:ignore:aws-s3-encryption-customer-key
 resource "aws_s3_bucket_server_side_encryption_configuration" "state_logs_encryption" {
   bucket = aws_s3_bucket.state_logs.id
 
@@ -66,7 +70,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "state_logs_encryp
 }
 
 resource "aws_s3_bucket_public_access_block" "state_logs_public_access_block" {
-  bucket = aws_s3_bucket.state.id
+  bucket = aws_s3_bucket.state_logs.id
 
   block_public_acls       = true
   block_public_policy     = true
@@ -74,8 +78,8 @@ resource "aws_s3_bucket_public_access_block" "state_logs_public_access_block" {
   restrict_public_buckets = true
 }
 
-resource "aws_s3_bucket_lifecycle_configuration" "state_bucket_lifecycle" {
-  bucket = aws_s3_bucket.state.id
+resource "aws_s3_bucket_lifecycle_configuration" "state_logs_bucket_lifecycle" {
+  bucket = aws_s3_bucket.state_logs.id
 
   rule {
     id = "expire-old-versions"
