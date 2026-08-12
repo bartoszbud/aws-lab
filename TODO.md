@@ -1,3 +1,5 @@
 - [x] Initialize repo
 - [x] Add tflint workflow
 - [x] Add tfsec workflow
+- [] Add terraform plan workflow
+- [] Add terraform apply workflow
