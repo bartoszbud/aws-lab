@@ -91,6 +91,8 @@ jobs:
         
       - name: Comment plan to PR
         uses: actions/github-script@v9
+        env:
+          PLAN: ${{ steps.plan.outputs.stdout }}
         with:
           script: |
             const dir = '${{ matrix.dir }}';
