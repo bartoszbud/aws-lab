@@ -75,18 +75,18 @@ jobs:
 
       - name: Initialize terraform
         id: init
-        run: terraform init 
+        run: terraform init -no-color
         working-directory: ${{ matrix.dir }}
 
       - name: Validate terraform
         id: validate
-        run: terraform validate 
+        run: terraform validate -no-color
         working-directory: ${{ matrix.dir }}
 
       - name: Generate plan
         id: plan
         continue-on-error: false
-        run: terraform plan -out=tfplan
+        run: terraform plan -no-color -out=tfplan
         working-directory: ${{ matrix.dir }}
         
       - name: Comment plan to PR
