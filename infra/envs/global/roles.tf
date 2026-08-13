@@ -1,7 +1,7 @@
 locals {
   iam_roles = {
     github_actions = {
-      role_name           = "GitHubOIDCRole"
+      role_name           = "GitHubActionsRole"
       assume_role_policy  = data.aws_iam_policy_document.github_actions_assume_role_policy.json
       managed_policy_arns = ["arn:aws:iam::aws:policy/AdministratorAccess"]
       tags = {
