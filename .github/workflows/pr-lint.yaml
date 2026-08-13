@@ -26,6 +26,7 @@ jobs:
           types: |
             docs
             feat
+            feature
             fix
             improvement
             refactor
