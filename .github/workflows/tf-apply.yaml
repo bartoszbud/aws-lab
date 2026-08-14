@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - infra/**
+      - infra/envs/**
 
 permissions:
   id-token: write
@@ -23,7 +23,7 @@ jobs:
       - name: Detect changes
         id: detect-changes
         run: |
-          changed_files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- 'infra/**')
+          changed_files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- 'infra/envs/**')
           direct_roots=()
 
           for file in $changed_files; do
