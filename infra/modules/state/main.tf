@@ -21,14 +21,14 @@ resource "aws_s3_bucket_versioning" "state_bucket_versioning" {
   bucket = aws_s3_bucket.state.id
   versioning_configuration {
     status = "Enabled"
-  }  
+  }
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "state_bucket_lifecycle" {
   bucket = aws_s3_bucket.state.id
 
   rule {
-    id = "expire-old-versions"
+    id     = "expire-old-versions"
     status = "Enabled"
 
     expiration {
@@ -82,7 +82,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "state_logs_bucket_lifecycle" {
   bucket = aws_s3_bucket.state_logs.id
 
   rule {
-    id = "expire-old-versions"
+    id     = "expire-old-versions"
     status = "Enabled"
 
     expiration {
