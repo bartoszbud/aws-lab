@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - infra/envs/**
+      - infra/**
 
 permissions:
   id-token: write
@@ -26,20 +26,18 @@ jobs:
       - name: Detect changes
         id: detect-changes
         run: |
-          changed_files=$(git diff --name-only origin/main...HEAD -- 'infra/envs/**')
+          changed_files=$(git diff --name-only origin/main...HEAD -- 'infra/**')
           direct_roots=()
 
           for file in $changed_files; do
-            if [[ "$file" == infra/envs/* ]]; then
+            if [[ "$file" == infra/* ]]; then
               dir=$(dirname "$file")
               
-              while [[ "$dir" != "infra/envs" && ! -f "$dir/backend.tf" ]]; do
+              while [[ "$dir" != "infra/envs" && "$dir" != "infra/modules" ]]; do
                 dir=$(dirname "$dir")
               done
               
-              if [[ -f "$dir/backend.tf" ]]; then
-                direct_roots+=("$dir")
-              fi
+              direct_roots+=("$dir")
             fi
           done
 
