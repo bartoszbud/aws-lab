@@ -26,17 +26,17 @@ jobs:
       - name: Detect changes
         id: detect-changes
         run: |
-          changed_files=$(git diff --name-only origin/main...HEAD -- 'infra/**')
+          changed_files=$(git diff --name-only origin/main...HEAD -- 'infra/envs/**')
           direct_roots=()
 
           for file in $changed_files; do
             if [[ "$file" == infra/* ]]; then
               dir=$(dirname "$file")
               
-              while [[ "$dir" != "infra/envs" && "$dir" != "infra/modules" ]]; do
+              while [[ "$(dirname "$dir")" != "infra/envs" && "$(dirname "$dir")" != "infra/modules" && "$dir" != "infra" ]]; do
                 dir=$(dirname "$dir")
               done
-              
+
               direct_roots+=("$dir")
             fi
           done
@@ -48,7 +48,33 @@ jobs:
           json=$(printf '%s\n' "${direct_roots[@]}" | jq -R -s -c 'split("\n")[:-1]')
 
           echo "json=$json" >> "$GITHUB_OUTPUT"
+  
+  validate:
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: contains(needs.detect-changes.outputs.json, 'infra/modules')
+    strategy:
+      matrix:
+        dir: ${{ fromJson(needs.detect-changes.outputs.json)}}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
 
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "1.14.6"
+
+      - name: Initialize terraform
+        id: init
+        run: terraform init -no-color
+        working-directory: ${{ matrix.dir }}
+
+      - name: Validate terraform
+        id: validate
+        run: terraform validate -no-color
+        working-directory: ${{ matrix.dir }}
+        
   plan:
     runs-on: ubuntu-latest
     needs: detect-changes
