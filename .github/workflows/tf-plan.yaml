@@ -16,7 +16,8 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      json: ${{ steps.detect-changes.outputs.json }}
+      roots_json: ${{ steps.detect-changes.outputs.roots_json }}
+      modules_json: ${{ steps.detect-changes.outputs.modules_json }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -28,34 +29,44 @@ jobs:
         run: |
           changed_files=$(git diff --name-only origin/main...HEAD -- 'infra/**')
           direct_roots=()
+          changed_modules=()
 
           for file in $changed_files; do
-            if [[ "$file" == infra/* ]]; then
+            if [[ "$file" == infra/envs/* ]]; then
               dir=$(dirname "$file")
               
-              while [[ "$(dirname "$dir")" != "infra/envs" && "$(dirname "$dir")" != "infra/modules" && "$dir" != "infra" ]]; do
+              while [[ "$dir" != "infra/envs" && ! -f "$dir/backend.tf" ]]; do
                 dir=$(dirname "$dir")
               done
 
-              direct_roots+=("$dir")
+              if [[ -f "$dir/backend.tf" ]]; then
+                direct_roots+=("$dir")
+              fi
+            elif [[ "$file" == "infra/modules/*" ]]; then
+              dir=$(dirname "$file")
+              changed_modules+=("$dir")
             fi
           done
 
           direct_roots=($(printf "%s\n" "${direct_roots[@]}" | sort -u))
+          changed_modules=($(printf "%s\n" "${changed_modules[@]}" | sort -u))
 
           echo "${direct_roots[@]}"
+          echo "${changed_modules[@]}"
 
-          json=$(printf '%s\n' "${direct_roots[@]}" | jq -R -s -c 'split("\n")[:-1]')
+          roots=$(printf '%s\n' "${direct_roots[@]}" | jq -R -s -c 'split("\n")[:-1]')
+          modules=$(printf '%s\n' "${changed_modules[@]}" | jq -R -s -c 'split("\n")[:-1]')
 
-          echo "json=$json" >> "$GITHUB_OUTPUT"
+          echo "roots_json=$roots" >> "$GITHUB_OUTPUT"
+          echo "modules_json=$modules" >> "$GITHUB_OUTPUT"
   
   validate:
     runs-on: ubuntu-latest
     needs: detect-changes
-    if: contains(needs.detect-changes.outputs.json, 'infra/modules')
+    if: needs.detect-changes.outputs.modules_json != '[]'
     strategy:
       matrix:
-        dir: ${{ fromJson(needs.detect-changes.outputs.json)}}
+        dir: ${{ fromJson(needs.detect-changes.outputs.modules_json)}}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -67,7 +78,7 @@ jobs:
 
       - name: Initialize terraform
         id: init
-        run: terraform init -no-color
+        run: terraform init -backend=false -no-color
         working-directory: ${{ matrix.dir }}
 
       - name: Validate terraform
@@ -78,10 +89,10 @@ jobs:
   plan:
     runs-on: ubuntu-latest
     needs: detect-changes
-    if: needs.detect-changes.outputs.json != '[]'
+    if: needs.detect-changes.outputs.roots_json != '[]'
     strategy:
       matrix: 
-        dir: ${{ fromJson(needs.detect-changes.outputs.json) }}
+        dir: ${{ fromJson(needs.detect-changes.outputs.roots_json) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
