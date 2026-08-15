@@ -64,7 +64,7 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name = "${var.environment} VPC public route"
+    Name = "${var.environment}-vpc-public-route"
   }
 }
 
@@ -72,4 +72,40 @@ resource "aws_route_table_association" "public_associations" {
   for_each       = aws_subnet.public_subnet
   subnet_id      = each.value.id
   route_table_id = aws_route_table.public.id
+}
+
+resource "aws_eip" "nat_elastic_ip" {
+  domain = "vpc"
+
+  tags = {
+    Name = "${var.environment}-vpc-elastic-ip"
+  }
+}
+
+resource "aws_nat_gateway" "nat_gateway" {
+  vpc_id            = aws_vpc.vpc.id
+  availability_mode = "regional"
+
+  tags = {
+    Name = "${var.environment}-vpc-nat-gateway"
+  }
+}
+
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.vpc.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.nat_gateway.id
+  }
+
+  tags = {
+    Name = "${var.environment}-vpc-private-route"
+  }
+}
+
+resource "aws_route_table_association" "private_associations" {
+  for_each       = var.private_subnets
+  subnet_id      = aws_subnet.private_subnet[each.key].id
+  route_table_id = aws_route_table.private.id
 }
