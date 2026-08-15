@@ -54,8 +54,8 @@ jobs:
           echo "${direct_roots[@]}"
           echo "${changed_modules[@]}"
 
-          roots=$(printf '%s\n' "${direct_roots[@]}" | jq -R -s -c 'split("\n")[:-1]')
-          modules=$(printf '%s\n' "${changed_modules[@]}" | jq -R -s -c 'split("\n")[:-1]')
+          roots=$(printf '%s\n' "${direct_roots[@]}" | grep -v '^$' | jq -R -s -c 'split("\n")[:-1]')
+          modules=$(printf '%s\n' "${changed_modules[@]}" | grep -v '^$' | jq -R -s -c 'split("\n")[:-1]')
 
           echo "roots_json=$roots" >> "$GITHUB_OUTPUT"
           echo "modules_json=$modules" >> "$GITHUB_OUTPUT"
