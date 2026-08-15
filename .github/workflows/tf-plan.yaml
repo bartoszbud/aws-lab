@@ -42,7 +42,7 @@ jobs:
               if [[ -f "$dir/backend.tf" ]]; then
                 direct_roots+=("$dir")
               fi
-            elif [[ "$file" == "infra/modules/*" ]]; then
+            elif [[ "$file" == infra/modules/* ]]; then
               dir=$(dirname "$file")
               changed_modules+=("$dir")
             fi
